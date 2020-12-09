@@ -1,0 +1,20 @@
+{
+  "slug": "EKO-CR",
+  "name": "EKO-CR",
+  "version": "1.0.0",
+  "license": "CC0-1.0",
+  "author": "classe DCMPSS",
+  "authorEmail": "a@b.c",
+  "authorUrl": "https://vcvrack.com/",
+  "sourceUrl": "https://github.com/LOGUNIVPM/EKO-CR-DCMPSS2020",
+  "modules": [
+    {
+      "slug": "dirac",
+      "name": "dirac",
+      "description": "sends dirac when trigger in",
+      "tags": [
+        "Utility"
+      ]
+    }
+  ]
+}
