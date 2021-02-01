@@ -15,6 +15,15 @@
       "tags": [
         "Utility"
       ]
+    },
+    {
+      "slug": "Charleston",
+      "name": "Charleston",
+      "description": "synthesis of the EKO-CR charleston sound",
+      "tags": [
+        "Drum",
+        "Physical modeling"
+      ]
     }
   ]
 }
