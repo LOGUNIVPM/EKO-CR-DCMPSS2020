@@ -24,6 +24,30 @@
         "Drum",
         "Physical modeling"
       ]
+    },
+    {
+      "slug": "EkoPanel",
+      "name": "Eko Panel",
+      "description": "The Eko Computerhythm panel",
+      "tags": [
+        "Utility"
+      ]
+    },
+    {
+      "slug": "timbale",
+      "name": "timbale",
+      "description": "create timbale sound",
+      "tags": [
+        "Utility"
+      ]
+    },
+    {
+      "slug": "SnareDrum",
+      "name": "SnareDrum",
+      "description": "sends dirac when trigger in",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }

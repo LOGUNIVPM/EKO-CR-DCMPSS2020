@@ -6,5 +6,8 @@ void init(rack::Plugin *p) {
 	pluginInstance = p;
 
 	p->addModel(modelDirac);
-	p->addModel(modelCharleston);
+	p->addModel(modelEkoPanel);
+    p->addModel(modelTimbale);
+    p->addModel(modelSnareDrum);
+    p->addModel(modelCharleston);
 }
