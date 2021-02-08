@@ -1,6 +1,19 @@
 #include "EKO-CR.hpp"
 
-#define EPSILON 1e-9f
+//values obtained from the circuit analysis and corrected to take account of the components tolerances
+#define OMEGA_PREWARPING 101373.f
+#define BANDPASS_OMEGA_CUTOFF 101373.f
+#define BANDPASS_DAMPING 0.15f
+#define HIGHPASS_OMEGA_CUTOFF 13956.f
+
+//waveform attack, decay and release parameters obtained from the comparison with the real sample
+#define DECAY_STOP 0.3f
+#define DECAY_TIME 0.06f
+#define ATTACK_TAU 0.0003f
+#define RELEASE_TAU 0.007f
+
+#define NOISE_LEVEL 0.2f
+
 
 struct lowPass {
     float yn, yn1, a;
@@ -14,9 +27,9 @@ struct lowPass {
     	yn = yn1 = 0.f;
     }
 
-    void init() {
+    void init(float setVal) {
         yn = 0.f;
-        yn1 = 0.8f;
+        yn1 = setVal;
     }
 
     void setTau(float tau) {
@@ -31,28 +44,25 @@ struct lowPass {
 };
 
 
-struct secondOrderBandPassTPT {
+struct secondOrderBandPassTPT { //Zavalishin SVF with TPT (only bandpass output)
 	float g, d;
 	float BP, BP2, s1, s2, v22;
 
 	secondOrderBandPassTPT() {
     	reset();
-    	setCoeff();
+    	setCoeff(BANDPASS_OMEGA_CUTOFF, BANDPASS_DAMPING, OMEGA_PREWARPING);
     }
 
     void reset() {
     	BP = BP2 = s1 = s2 = v22 = 0.f;
     }
 
-    void setCoeff() {
-    	float omegaP = 2*M_PI*17470; //prewarping point
-    	float omegaC = 109830; //cutoff
-    	float R = 0.0189; //damping
-    	g = omegaC/omegaP*tan(omegaP*0.5*APP->engine->getSampleTime()); //prewarped gain
-    	d = 1/(1 + 2*R*g + g*g);
+    void setCoeff(float cutoff, float damp, float prewarp) {
+    	g = cutoff/prewarp * tan(prewarp*0.5*APP->engine->getSampleTime()); //prewarped gain
+    	d = 1/(1 + 2*damp*g + g*g);
     }
 
-    float process(float x) { //Zavalishin
+    float process(float x) {
     	BP = (g*(x-s2)+s1)*d;
     	BP2 = BP + BP;
     	s1 = BP2 - s1;
@@ -63,28 +73,26 @@ struct secondOrderBandPassTPT {
 };
 
 
-struct firstOrderHighPassTPT {
+struct firstOrderHighPassTPT { //Zavalishin first order highpass with TPT
 	float g2, Ghp;
 	float y, xs, s;
 
 	firstOrderHighPassTPT() {
     	reset();
-    	setCoeff();
+    	setCoeff(HIGHPASS_OMEGA_CUTOFF, OMEGA_PREWARPING);
     }
 
     void reset() {
     	y = xs = s = 0.f;
     }
 
-    void setCoeff() {
-    	float omegaP = 2*M_PI*17470; //prewarping point
-    	float omegaC = 13955; //cutoff
-    	float g = omegaC/omegaP*tan(omegaP*0.5*APP->engine->getSampleTime()); //prewarped gain
+    void setCoeff(float cutoff, float prewarp) {
+    	float g = cutoff/prewarp * tan(prewarp*0.5*APP->engine->getSampleTime()); //prewarped gain
     	g2 = g + g;
     	Ghp = 1/(1 + g);
     }
 
-    float process(float x) { //Zavalishin
+    float process(float x) {
     	xs = x - s;
     	y = xs*Ghp;
     	s = s + y*g2;
@@ -140,7 +148,7 @@ struct Charleston : Module {
 void Charleston::process(const ProcessArgs &args) {
 
 	float out;
-	float Dstep = 0.2f / (EPSILON + args.sampleRate * 0.05f);
+	float Dstep = (DECAY_STOP - 1.f) / (args.sampleRate*DECAY_TIME);
 	float led = 0.f;
 
 	if (ts.process(inputs[TRIGGER_INPUT].getVoltage())) {
@@ -151,53 +159,51 @@ void Charleston::process(const ProcessArgs &args) {
 		led = 1.f;
 	}
 
-	//generazione della forma d'onda in ingresso al filtro
+	//generation of the waveform at the filter input
 	if (isRunning) {
-		if (isLin) { //BJT in zona lineare
+		if (isLin) {
 			if (isAtk) { //Attack
-				lp.setTau(0.0001f);
+				lp.setTau(ATTACK_TAU);
 				in = lp.process(1.f);
 				if (in >= 1 - 0.001) {
 					isAtk = false;
 				}
-				inNoise = in + (random::uniform() - 0.5f) * 0.15f;
 			}
 			else { //Decay
-				in = in - Dstep;
-				if (in <= 0.8 + 0.001) {
+				in += Dstep;
+				if (in <= DECAY_STOP + 0.001) {
 					isLin = false;
-					lp.init();
+					lp.init(DECAY_STOP);
 				}
-				inNoise = in + (random::uniform() - 0.5f) * 0.15f * in;
 			}
 		}
-		else { //Release (BJT in cutoff)
-			lp.setTau(0.007f);
+		else { //Release
+			lp.setTau(RELEASE_TAU);
 			in = lp.process(0.f);
 			if (in <= 0.001) {
 				isRunning = false;
 			}
-			inNoise = in + (random::uniform() - 0.5f) * 0.15f * in;
 		}
 
-		//filtraggio
-		out = bp.process(inNoise);
-		out = hp.process(out);
+		inNoise = in + (random::uniform() - 0.5f) * NOISE_LEVEL * in; //noise signal with zero mean is scaled and added to the waveform
+
+		//Third order filter
+		out = bp.process(inNoise); //second order bandpass
+		out = hp.process(out); //first order highpass
 	}
 	else {
 		out = 0;
-		inNoise = 0;
 	}
 
-	outputs[MAIN_OUTPUT].setVoltage(out*15);
+	outputs[MAIN_OUTPUT].setVoltage(out*40);
 
 	lights[LIGHT_TRIGGER].setSmoothBrightness(led, 5e-6f);
 }
 
 
 void Charleston::onSampleRateChange() {
-	bp.setCoeff();
-	hp.setCoeff();
+	bp.setCoeff(BANDPASS_OMEGA_CUTOFF, BANDPASS_DAMPING, OMEGA_PREWARPING);
+	hp.setCoeff(HIGHPASS_OMEGA_CUTOFF, OMEGA_PREWARPING);
 }
 
 
