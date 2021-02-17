@@ -1,10 +1,15 @@
 #include "EKO-CR.hpp"
 
 //values obtained from the circuit analysis and corrected to take account of the components tolerances
-#define OMEGA_PREWARPING 101373.f
-#define BANDPASS_OMEGA_CUTOFF 101373.f
-#define BANDPASS_DAMPING 0.15f
-#define HIGHPASS_OMEGA_CUTOFF 13956.f
+#define OMEGA_PREWARPING 101020.f
+//filters coefficient in the s-domain (Bandpass B0=B2=0, Highpass B1=0)
+#define BANDPASS_B1 1e6f
+#define BANDPASS_A0 1.f
+#define BANDPASS_A1 31982.f
+#define BANDPASS_A2 10206e6f
+#define HIGHPASS_B0 1.f
+#define HIGHPASS_A0 1.f
+#define HIGHPASS_A1 13958.f
 
 //waveform attack, decay and release parameters obtained from the comparison with the real sample
 #define DECAY_STOP 0.3f
@@ -12,7 +17,7 @@
 #define ATTACK_TAU 0.0003f
 #define RELEASE_TAU 0.007f
 
-#define NOISE_LEVEL 0.2f
+#define NOISE_LEVEL 0.2f //set the noise level
 
 
 struct lowPass {
@@ -44,58 +49,75 @@ struct lowPass {
 };
 
 
-struct secondOrderBandPassTPT { //Zavalishin SVF with TPT (only bandpass output)
-	float g, d;
-	float BP, BP2, s1, s2, v22;
+struct secondOrderBandPassDF2 { //Second order bandpass implemented with Direct Form 2
+	float b0, a0, a1, a2;
+	float y, w, wz1, wz2;
 
-	secondOrderBandPassTPT() {
+	secondOrderBandPassDF2() {
     	reset();
-    	setCoeff(BANDPASS_OMEGA_CUTOFF, BANDPASS_DAMPING, OMEGA_PREWARPING);
+    	setCoeff(OMEGA_PREWARPING);
     }
 
     void reset() {
-    	BP = BP2 = s1 = s2 = v22 = 0.f;
+    	y = w = wz1 = wz2 = 0.f;
     }
 
-    void setCoeff(float cutoff, float damp, float prewarp) {
-    	g = cutoff/prewarp * tan(prewarp*0.5*APP->engine->getSampleTime()); //prewarped gain
-    	d = 1/(1 + 2*damp*g + g*g);
+    void setCoeff(float prewarp) { //apply bilinear transformation with prewarping
+    	float K = prewarp/tan(prewarp*0.5*APP->engine->getSampleTime());
+
+    	//z-domain coefficients
+    	b0 = BANDPASS_B1*K;
+    	//b1 = 0
+    	//b2 = -b0
+    	a0 = BANDPASS_A0*K*K + BANDPASS_A1*K + BANDPASS_A2;
+    	a1 = 2*BANDPASS_A2 - 2*BANDPASS_A0*K*K;
+    	a2 = BANDPASS_A0*K*K - BANDPASS_A1*K + BANDPASS_A2;
+    	//normalize with respect to a0
+    	b0 = b0/a0;
+    	a1 = a1/a0;
+    	a2 = a2/a0;
     }
 
     float process(float x) {
-    	BP = (g*(x-s2)+s1)*d;
-    	BP2 = BP + BP;
-    	s1 = BP2 - s1;
-    	v22 = g*BP2;
-    	s2 = s2 + v22;
-    	return BP;
+    	w = x - wz1*a1 - wz2*a2;
+    	y = (w - wz2)*b0; //y=w*b0 + wz1*b1 + wz2*b2 (b1=0, b2=-b0)
+    	wz2 = wz1;
+    	wz1 = w;
+    	return y;
     }
 };
 
 
-struct firstOrderHighPassTPT { //Zavalishin first order highpass with TPT
-	float g2, Ghp;
-	float y, xs, s;
+struct firstOrderHighPassDF2 { //First order highpass implemented with Direct Form 2
+	float b0, a0, a1;
+	float y, w, wz1;
 
-	firstOrderHighPassTPT() {
+	firstOrderHighPassDF2() {
     	reset();
-    	setCoeff(HIGHPASS_OMEGA_CUTOFF, OMEGA_PREWARPING);
+    	setCoeff(OMEGA_PREWARPING);
     }
 
     void reset() {
-    	y = xs = s = 0.f;
+    	y = w = wz1 = 0.f;
     }
 
-    void setCoeff(float cutoff, float prewarp) {
-    	float g = cutoff/prewarp * tan(prewarp*0.5*APP->engine->getSampleTime()); //prewarped gain
-    	g2 = g + g;
-    	Ghp = 1/(1 + g);
+    void setCoeff(float prewarp) { //apply bilinear transformation with prewarping
+    	float K = prewarp/tan(prewarp*0.5*APP->engine->getSampleTime());
+
+    	//z-domain coefficients
+    	b0 = HIGHPASS_B0*K;
+    	//b1 = -b0
+    	a0 = HIGHPASS_A0*K + HIGHPASS_A1;
+    	a1 = -HIGHPASS_A0*K + HIGHPASS_A1;
+    	//normalize with respect to a0
+    	b0 = b0/a0;
+    	a1 = a1/a0;
     }
 
     float process(float x) {
-    	xs = x - s;
-    	y = xs*Ghp;
-    	s = s + y*g2;
+    	w = x - wz1*a1;
+    	y = (w - wz1)*b0; //y=w*b0 + wz1*b1 (b1=-b0)
+    	wz1 = w;
     	return y;
     }
 };
@@ -121,8 +143,8 @@ struct Charleston : Module {
 
 	dsp::SchmittTrigger ts;
 	lowPass lp;
-	secondOrderBandPassTPT bp;
-	firstOrderHighPassTPT hp;
+	secondOrderBandPassDF2 bp;
+	firstOrderHighPassDF2 hp;
 	float in;
 	float inNoise;
 	bool isRunning;
@@ -195,15 +217,15 @@ void Charleston::process(const ProcessArgs &args) {
 		out = 0;
 	}
 
-	outputs[MAIN_OUTPUT].setVoltage(out*40);
+	outputs[MAIN_OUTPUT].setVoltage(out*4);
 
 	lights[LIGHT_TRIGGER].setSmoothBrightness(led, 5e-6f);
 }
 
 
 void Charleston::onSampleRateChange() {
-	bp.setCoeff(BANDPASS_OMEGA_CUTOFF, BANDPASS_DAMPING, OMEGA_PREWARPING);
-	hp.setCoeff(HIGHPASS_OMEGA_CUTOFF, OMEGA_PREWARPING);
+	bp.setCoeff(OMEGA_PREWARPING);
+	hp.setCoeff(OMEGA_PREWARPING);
 }
 
 
