@@ -229,13 +229,13 @@ struct SnareDrumWidget : ModuleWidget
         setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ATemplate.svg")));
         box.size = Vec(12 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT);
 
-        addInput(createInputCentered<PJ301MPort>(mm2px(Vec(55, 30)), module, SnareDrum::TRIGGER_INPUT));
+        addInput(createInputCentered<PJ301MPort>(window::mm2px(Vec(55, 30)), module, SnareDrum::TRIGGER_INPUT));
 
-        addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(55, 50)), module, SnareDrum::MAIN_OUTPUT));
+        addOutput(createOutputCentered<PJ301MPort>(window::mm2px(Vec(55, 50)), module, SnareDrum::MAIN_OUTPUT));
 
-        addChild(createLightCentered<SmallLight<BlueLight>>(mm2px(Vec(55, 70)), module, SnareDrum::PLAYING_LIGHT));
+        addChild(createLightCentered<SmallLight<BlueLight>>(window::mm2px(Vec(55, 70)), module, SnareDrum::PLAYING_LIGHT));
 
-        addParam(createParam<RoundBlackKnob>(mm2px(Vec(50, 85)), module, SnareDrum::VOL_PARAM));
+        addParam(createParam<RoundBlackKnob>(window::mm2px(Vec(50, 85)), module, SnareDrum::VOL_PARAM));
     }
 };
 

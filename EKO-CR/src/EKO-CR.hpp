@@ -25,8 +25,8 @@ struct EkoHorzVolumeSlider : app::SvgSlider {
 	EkoHorzVolumeSlider() {
 		//math::Vec margin = math::Vec(3.5, 3.5);
 		horizontal = true;
-		maxHandlePos = app::mm2px(math::Vec(22.078, 0.738).plus(math::Vec(0, 2)));
-		minHandlePos = app::mm2px(math::Vec(0.738, 0.738).plus(math::Vec(0, 2)));
+		maxHandlePos = mm2px(math::Vec(22.078, 0.738).plus(math::Vec(0, 2)));
+		minHandlePos = mm2px(math::Vec(0.738, 0.738).plus(math::Vec(0, 2)));
 		setBackgroundSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/EKO-CR-sliderBG.svg")));
 		setHandleSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/EKO-CR-sliderCAP.svg")));
 
@@ -43,6 +43,14 @@ struct EkoStepButton : app::SvgSwitch {
 	}
 };
 
+// Volume and Speed knobs
+struct EkoKnob : SvgKnob {
+	EkoKnob() {
+		minAngle = -0.8 * M_PI;
+		maxAngle = 0.8 * M_PI;
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/EKO-knob.svg")));
+	}
+};
 // ABC STUFF
 
 
@@ -56,7 +64,6 @@ struct ATextLabel : TransparentWidget {
 		box.pos = pos;
 		box.size.y = fh;
 		setColor(0x00, 0x00, 0x00, 0xFF);
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/DejaVuSansMono.ttf"));
 		setText(" ");
 	}
 
@@ -64,7 +71,6 @@ struct ATextLabel : TransparentWidget {
 		box.pos = pos;
 		box.size.y = fh;
 		setColor(r, g, b, a);
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/DejaVuSansMono.ttf"));
 		setText(" ");
 	}
 
@@ -99,7 +105,8 @@ struct ATextLabel : TransparentWidget {
 	}
 
 	void drawTxt(const DrawArgs &args, const char * txt) {
-
+        
+        font = APP->window->loadFont("res/fonts/DejaVuSans.ttf");
 		Vec c = Vec(box.size.x/2, box.size.y);
 
 		nvgFontSize(args.vg, fh);
@@ -131,7 +138,6 @@ struct ATextHeading : TransparentWidget {
 		box.pos = pos;
 		box.size.y = fh;
 		setColor(0xFF, 0xFF, 0xFF, 0xFF);
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/DejaVuSansMono.ttf"));
 		setText(" ");
 	}
 
@@ -139,7 +145,6 @@ struct ATextHeading : TransparentWidget {
 		box.pos = pos;
 		box.size.y = fh;
 		setColor(r, g, b, a);
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/DejaVuSans.ttf"));
 		setText(" ");
 	}
 
@@ -181,6 +186,7 @@ struct ATextHeading : TransparentWidget {
 
 	void drawTxt(const DrawArgs &args, const char * txt) {
 
+        font = APP->window->loadFont("res/fonts/DejaVuSans.ttf");
 		Vec c = Vec(box.size.x/2, box.size.y);
 
 		nvgFontSize(args.vg, fh);
@@ -206,7 +212,6 @@ struct ATitle: TransparentWidget {
 		box.pos = Vec(1 , 1);
 		box.size.y = fh;
 		setColor(0x55, 0x99, 0xFF, 0xFF);
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/DejaVuSans.ttf"));
 		setText(" ");
 	}
 
@@ -230,6 +235,7 @@ struct ATitle: TransparentWidget {
 	void drawTxt(const DrawArgs &args, const char * txt) {
 		float bounds[4];
 		Vec c = Vec(box.pos.x, box.pos.y);
+        font = APP->window->loadFont("res/fonts/DejaVuSans.ttf");
 
 		nvgFontSize(args.vg, fh);
 		nvgFontFaceId(args.vg, font->handle);

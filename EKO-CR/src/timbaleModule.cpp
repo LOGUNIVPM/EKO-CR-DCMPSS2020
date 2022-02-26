@@ -147,9 +147,6 @@ struct timbaleWidget : ModuleWidget {
 
 			addOutput(createOutput<PJ301MPort>(Vec(55, 200), module, timbale::MAIN_OUTPUT));
 
-			//addParam(createParam<RoundBlackKnob>(Vec(30, 110), module, timbale::PARAM));
-
-			//addChild(createLight<SmallLight<GreenLight>>(Vec(65, 240), module, timbale::LIGHT_TRIGGER));
 
 	}
 };

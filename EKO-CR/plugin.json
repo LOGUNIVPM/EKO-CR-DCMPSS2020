@@ -1,7 +1,7 @@
 {
   "slug": "EKO-CR",
   "name": "EKO-CR",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "license": "CC0-1.0",
   "author": "classe DCMPSS",
   "authorEmail": "a@b.c",
@@ -36,7 +36,7 @@
     {
       "slug": "timbale",
       "name": "timbale",
-      "description": "create timbale sound",
+      "description": "EKO CR Timbale sound",
       "tags": [
         "Utility"
       ]
@@ -44,7 +44,7 @@
     {
       "slug": "SnareDrum",
       "name": "SnareDrum",
-      "description": "sends dirac when trigger in",
+      "description": "EKO CR Snare drum sound",
       "tags": [
         "Utility"
       ]
