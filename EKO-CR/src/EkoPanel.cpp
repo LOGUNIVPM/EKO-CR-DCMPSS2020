@@ -9,6 +9,16 @@ struct EkoPanel : Module {
 		STEP_96 = 108,
 		VOLUME_1 = 109,
 		VOLUME_6 = 115,
+		START_STOP,
+		MAIN_VOLUME,
+		TEMPO_KNOB,
+		SEQ_STOP_x5,
+		SEQ_STOP_x6,
+		SEQ_STOP_x9,
+		SEQ_STOP_x10,
+		SEQ_STOP_x12,
+		SEQ_STOP_x15,
+		SEQ_STOP_x16,
 		NUM_PARAMS,
 	};
 	enum InputIds {
@@ -60,8 +70,8 @@ struct EkoPanelWidget : ModuleWidget {
 			setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/EKO-CR-panel.svg")));
 
 			for (i = 0; i < 12; i+=2) {
-				addParam(createParamCentered<EkoVoiceButton>(Vec(80, 50+i*23), module, EkoPanel::VOICE_BUTT_1+i));
-				addParam(createParamCentered<EkoVoiceButton>(Vec(100, 50+i*23), module, EkoPanel::VOICE_BUTT_1+i+1));
+				addParam(createParamCentered<EkoVoiceButton>(Vec(95, 50+i*23), module, EkoPanel::VOICE_BUTT_1+i));
+				addParam(createParamCentered<EkoVoiceButton>(Vec(122, 50+i*23), module, EkoPanel::VOICE_BUTT_1+i+1));
 			}
 
 			for (i = 0; i < 6; i++) {
@@ -70,11 +80,20 @@ struct EkoPanelWidget : ModuleWidget {
 				}
 			}
 
-//			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.077, 28.048)), module, EkoPanel::TRIGGER_INPUT));
-//
-//			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.675, 50.146)), module, EkoPanel::MAIN_OUTPUT));
-//
-//			addChild(createLightCentered<SmallLight<GreenLight>>(mm2px(Vec(27.781, 50.448)), module, EkoPanel::LIGHT_TRIGGER));
+
+			addParam(createParamCentered<EkoKnob>(Vec(60, 355), module, EkoPanel::MAIN_VOLUME));
+			addParam(createParamCentered<EkoKnob>(Vec(140, 355), module, EkoPanel::TEMPO_KNOB));
+			addParam(createParamCentered<EkoVoiceButton>(Vec(245, 350), module, EkoPanel::START_STOP));
+
+#define SEQ_STOP_BUTT_x 310
+			addParam(createParamCentered<EkoVoiceButton>(Vec(SEQ_STOP_BUTT_x, 350), module, EkoPanel::SEQ_STOP_x5));
+			addParam(createParamCentered<EkoVoiceButton>(Vec(SEQ_STOP_BUTT_x+25, 350), module, EkoPanel::SEQ_STOP_x6));
+			addParam(createParamCentered<EkoVoiceButton>(Vec(SEQ_STOP_BUTT_x+50, 350), module, EkoPanel::SEQ_STOP_x9));
+			addParam(createParamCentered<EkoVoiceButton>(Vec(SEQ_STOP_BUTT_x+75, 350), module, EkoPanel::SEQ_STOP_x10));
+			addParam(createParamCentered<EkoVoiceButton>(Vec(SEQ_STOP_BUTT_x+100, 350), module, EkoPanel::SEQ_STOP_x12));
+			addParam(createParamCentered<EkoVoiceButton>(Vec(SEQ_STOP_BUTT_x+125, 350), module, EkoPanel::SEQ_STOP_x15));
+			addParam(createParamCentered<EkoVoiceButton>(Vec(SEQ_STOP_BUTT_x+150, 350), module, EkoPanel::SEQ_STOP_x16));
+
 
 		}
 
