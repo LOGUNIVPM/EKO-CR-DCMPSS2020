@@ -9,6 +9,7 @@ extern Model* modelEkoPanel;
 extern Model* modelTimbale;
 extern Model* modelSnareDrum;
 extern Model* modelCharleston;
+extern Model* modelABassDrum;
 
 /* ------- GUI ---------- */
 

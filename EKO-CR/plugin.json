@@ -48,6 +48,14 @@
       "tags": [
         "Utility"
       ]
+    },
+    {
+      "slug": "ABassDrum",
+      "name": "ABassDrum",
+      "description": "EKO CR Bass drum sound",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }

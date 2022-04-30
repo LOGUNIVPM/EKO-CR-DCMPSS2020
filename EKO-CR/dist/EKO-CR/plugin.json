@@ -1,0 +1,61 @@
+{
+  "slug": "EKO-CR",
+  "name": "EKO-CR",
+  "version": "2.0.0",
+  "license": "CC0-1.0",
+  "author": "classe DCMPSS",
+  "authorEmail": "a@b.c",
+  "authorUrl": "https://vcvrack.com/",
+  "sourceUrl": "https://github.com/LOGUNIVPM/EKO-CR-DCMPSS2020",
+  "modules": [
+    {
+      "slug": "dirac",
+      "name": "dirac",
+      "description": "sends dirac when trigger in",
+      "tags": [
+        "Utility"
+      ]
+    },
+    {
+      "slug": "Charleston",
+      "name": "Charleston",
+      "description": "synthesis of the EKO-CR charleston sound",
+      "tags": [
+        "Drum",
+        "Physical modeling"
+      ]
+    },
+    {
+      "slug": "EkoPanel",
+      "name": "Eko Panel",
+      "description": "The Eko Computerhythm panel",
+      "tags": [
+        "Utility"
+      ]
+    },
+    {
+      "slug": "timbale",
+      "name": "timbale",
+      "description": "EKO CR Timbale sound",
+      "tags": [
+        "Utility"
+      ]
+    },
+    {
+      "slug": "SnareDrum",
+      "name": "SnareDrum",
+      "description": "EKO CR Snare drum sound",
+      "tags": [
+        "Utility"
+      ]
+    },
+    {
+      "slug": "ABassDrum",
+      "name": "ABassDrum",
+      "description": "EKO CR Bass drum sound",
+      "tags": [
+        "Utility"
+      ]
+    }
+  ]
+}
