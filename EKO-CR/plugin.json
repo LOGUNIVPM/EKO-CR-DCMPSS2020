@@ -56,6 +56,14 @@
       "tags": [
         "Utility"
       ]
+    },
+    {
+      "slug": "Triangle",
+      "name": "Triangle",
+      "description": "EKO CR Triangle sound",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }
