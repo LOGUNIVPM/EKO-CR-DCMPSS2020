@@ -11,4 +11,5 @@ void init(rack::Plugin *p) {
     p->addModel(modelSnareDrum);
     p->addModel(modelCharleston);
     p->addModel(modelABassDrum);
+    p->addModel(modelTriangle);
 }
