@@ -4,9 +4,6 @@
 #include "DPW.hpp"
 
 
-#define DPWOSC_TYPE double
-#define POLYCHMAX 16
-
 struct Triangle : Module {
 	enum ParamIds {
 	    NUM_PARAMS,
@@ -24,29 +21,31 @@ struct Triangle : Module {
 		NUM_LIGHTS,
 	};
 	
-	dsp::SchmittTrigger gateDetect; // Trigger di Gate
+	dsp::SchmittTrigger gateDetect; // Trigger del Gate
 	
-	RCFilter<double> *rc_env; // Filtro RC per l'ADSR
+	RCFilter<float> *rc_env1; // Filtro RC per l'ADSR 1
+	RCFilter<float> *rc_env2; // Filtro RC per l'ADSR 2
 	// Inviluppo Primario
 	bool isAtk1, isRunning1;
-	double Atau1, Dtau1, Rtau1, sus1;
-	double env1;
+	float Atau1, Dtau1, Rtau1, sus1;
+	float env1;
 	// Inviluppo Secondario
 	bool isAtk2, isRunning2;
-	double Atau2, Dtau2, Rtau2, sus2;
-	double env2;
+	float Atau2, Dtau2, Rtau2, sus2;
+	float env2;
 
 	DPW<double> *Osc; // Oscillatore DPW di tipo sawtooth 
 	unsigned int dpwOrder = 4; // Ordine dell'oscillatore
 
-	RCFilter<double> *filterRC; // Filtro RC per sagomare il sawtooth
+	RCFilter<float> *filterRC; // Filtro RC per sagomare il sawtooth
 
-	SVF<double> * filterSV; // Filtro SV per seconda armonica
+	SVF<float> * filterSV; // Filtro SV per seconda armonica
 
 	//
 	double saw; // Sawtooth in uscita dal DPW
-	double saw_rc; // Segnale filtrato dal filtro RC
-	double hpf, bpf, lpf; // uscite dal filtro SV
+	float saw_rc; // Segnale filtrato dal filtro RC
+	float saw_sv; // Segnale inviluppato in ingresso al filtro SV
+	float hpf, bpf, lpf; // uscite dal filtro SV
 
     Triangle() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -54,28 +53,31 @@ struct Triangle : Module {
 		Osc->setPitch(3703.0); // Setto la frequenza dell'oscillatore a f0 = 3703
 		Osc->onDPWOrderChange(dpwOrder); // Cambio l'ordine del DPW
 
-		rc_env = new RCFilter<double>(0.999);
+		rc_env1 = new RCFilter<float>(0.999);
+		rc_env2 = new RCFilter<float>(0.999);
 		isAtk1 = isAtk2 = false;
 		isRunning1 = isRunning2 = false;
-		env1 = env2 = 0.0;
+		env1 = env2 = 0.f;
+		
+		// Valori dei parametri dei 2 inviluppi, ottenuti empiricamente
+		// 
+		Atau1 = 1e-9f;
+		Dtau1 = 0.21446f;
+		Rtau1 = 0.00727f;
+		sus1 = 1e-9f;
 		//
-		Atau1 = 0.0;
-		Dtau1 = 0.21446;
-		Rtau1 = 0.012048;
-		sus1 = 0.0;
-		//
-		Atau2 = 0.024097;
-		Dtau2 = 0.38916;
-		Rtau2 = 0.060241;
-		sus2 = 0.0;	
+		Atau2 = 0.00651f;
+		Dtau2 = 0.04916f;
+		Rtau2 = 0.010241f;
+		sus2 = 0.033253f;	
 
-		filterRC = new RCFilter<double>;
-		double fc_rc = pow(2.5,10.0);
+		filterRC = new RCFilter<float>;
+		float fc_rc = std::pow(2.4,10.0);
 		filterRC->setCutoff(fc_rc);
 
-		filterSV = new SVF<double>(7400, 0.021688);
-		hpf = bpf = lpf = 0.0;
-		saw = saw_rc = 0.0;
+		filterSV = new SVF<float>(7400, 0.010688);
+		hpf = bpf = lpf = 0.f;
+		saw = saw_rc = saw_sv = 0.f;
 	}
 
 	void process(const ProcessArgs &args) override;
@@ -84,6 +86,12 @@ struct Triangle : Module {
 
 void Triangle::process(const ProcessArgs &args) {
 
+	// Sawtooth
+	saw = Osc->process();
+
+	// RC Filter
+	saw_rc = filterRC->process(saw);
+	
 	// Gate Input
 	bool gate = inputs[IN_GATE].getVoltage() >= 1.0;
 	if (gateDetect.process(gate)) {
@@ -91,38 +99,29 @@ void Triangle::process(const ProcessArgs &args) {
 		isRunning1 = isRunning2 = true;
 	}
 
-	// Sawtooth
-	saw = Osc->process();
-
-	// RCFilter
-	saw_rc = filterRC->process(saw);
-
-	// SVFilter
-	filterSV->process(saw_rc, &hpf, &bpf, &lpf);
-
-    // 
+    // Envelopes 
 	if (isRunning1) {
 			if (gate) {
 				if (isAtk1) {
 					// ATK
-					rc_env->setTau(Atau1);
-					env1 = rc_env->process(1.0);
+					rc_env1->setTau(Atau1);
+					env1 = rc_env1->process(1.0);
 					if (env1 >= 1.0 - 0.001) {
 						isAtk1 = false;
 					}
 				}
 				else {
 					// DEC
-					rc_env->setTau(Dtau1);
+					rc_env1->setTau(Dtau1);
 					if (env1 <= sus1 + 0.001)
 						env1 = sus1;
 					else
-						env1 = rc_env->process(sus1);
+						env1 = rc_env1->process(sus1);
 				}
 			} else {
 				// REL
-				rc_env->setTau(Rtau1);
-				env1 = rc_env->process(0.0);
+				rc_env1->setTau(Rtau1);
+				env1 = rc_env1->process(0.0);
 				if (env1 <= 0.001)
 					isRunning1 = false;
 			}
@@ -134,24 +133,24 @@ void Triangle::process(const ProcessArgs &args) {
 			if (gate) {
 				if (isAtk2) {
 					// ATK
-					rc_env->setTau(Atau1);
-					env2 = rc_env->process(1.0);
+					rc_env2->setTau(Atau2);
+					env2 = rc_env2->process(1.0);
 					if (env2 >= 1.0 - 0.001) {
 						isAtk2 = false;
 					}
 				}
 				else {
 					// DEC
-					rc_env->setTau(Dtau1);
+					rc_env2->setTau(Dtau2);
 					if (env2 <= sus2 + 0.001)
 						env2 = sus2;
 					else
-						env2 = rc_env->process(sus2);
+						env2 = rc_env2->process(sus2);
 				}
 			} else {
 				// REL
-				rc_env->setTau(Rtau2);
-				env2 = rc_env->process(0.0);
+				rc_env2->setTau(Rtau2);
+				env2 = rc_env2->process(0.0);
 				if (env2 <= 0.001)
 					isRunning2 = false;
 			}
@@ -159,8 +158,17 @@ void Triangle::process(const ProcessArgs &args) {
 			env2 = 0.0;
 		}
 
+	env1 = clamp(env1, 0.f, 1.f);
+	env2 = clamp(env2, 0.f, 1.f);
+
+	// SV Filter
+	filterSV->setCoeffs(0.1678*args.sampleRate,0.010688);
+	saw_sv = env2 * saw_rc;
+	filterSV->process(saw_sv, &hpf, &bpf, &lpf);
+	
+	// Output 
 	if (outputs[OUT_TRI].isConnected()){
-    outputs[OUT_TRI].setVoltage(10*(env1*saw_rc+env2*bpf));
+    outputs[OUT_TRI].setVoltage(10.f*(env1*saw_rc+hpf));
 	}
 }
 
