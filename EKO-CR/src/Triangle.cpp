@@ -168,7 +168,7 @@ void Triangle::process(const ProcessArgs &args) {
 	
 	// Output 
 	if (outputs[OUT_TRI].isConnected()){
-    outputs[OUT_TRI].setVoltage(10.f*(env1*saw_rc+hpf));
+    outputs[OUT_TRI].setVoltage(10.f*(env1*saw_rc+bpf));
 	}
 }
 
