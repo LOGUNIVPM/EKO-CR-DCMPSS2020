@@ -21,7 +21,7 @@ struct Triangle : Module {
 		NUM_LIGHTS,
 	};
 	
-	dsp::SchmittTrigger gateDetect; // Trigger del Gate
+	dsp::SchmittTrigger gateDetect; // Trigger di Gate
 	
 	RCFilter<float> *rc_env1; // Filtro RC per l'ADSR 1
 	RCFilter<float> *rc_env2; // Filtro RC per l'ADSR 2
@@ -41,7 +41,7 @@ struct Triangle : Module {
 
 	SVF<float> * filterSV; // Filtro SV per seconda armonica
 
-	//
+	// Segnali
 	double saw; // Sawtooth in uscita dal DPW
 	float saw_rc; // Segnale filtrato dal filtro RC
 	float saw_sv; // Segnale inviluppato in ingresso al filtro SV
@@ -66,16 +66,17 @@ struct Triangle : Module {
 		Rtau1 = 0.00727f;
 		sus1 = 1e-9f;
 		//
-		Atau2 = 0.00651f;
+		Atau2 = 0.00641f;
 		Dtau2 = 0.04916f;
-		Rtau2 = 0.010241f;
+		Rtau2 = 0.00841f;
 		sus2 = 0.033253f;	
 
+	  	// RC Filter
 		filterRC = new RCFilter<float>;
 		float fc_rc = std::pow(2.4,10.0);
 		filterRC->setCutoff(fc_rc);
-
-		filterSV = new SVF<float>(7400, 0.010688);
+		// SV Filter
+		filterSV = new SVF<float>(7400.f, 0.010688f);
 		hpf = bpf = lpf = 0.f;
 		saw = saw_rc = saw_sv = 0.f;
 	}
@@ -162,7 +163,6 @@ void Triangle::process(const ProcessArgs &args) {
 	env2 = clamp(env2, 0.f, 1.f);
 
 	// SV Filter
-	filterSV->setCoeffs(0.1678*args.sampleRate,0.010688);
 	saw_sv = env2 * saw_rc;
 	filterSV->process(saw_sv, &hpf, &bpf, &lpf);
 	
