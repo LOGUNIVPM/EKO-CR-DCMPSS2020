@@ -64,6 +64,14 @@
       "tags": [
         "Utility"
       ]
+    },
+    {
+      "slug": "Cymbal1",
+      "name": "Cymbal1",
+      "description": "EKO CR Cymbal1 sound",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }
