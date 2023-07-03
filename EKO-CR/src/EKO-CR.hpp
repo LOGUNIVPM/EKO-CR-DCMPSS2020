@@ -11,6 +11,7 @@ extern Model* modelSnareDrum;
 extern Model* modelCharleston;
 extern Model* modelABassDrum;
 extern Model* modelTriangle;
+extern Model* modelCymbal1;
 
 /* ------- GUI ---------- */
 
