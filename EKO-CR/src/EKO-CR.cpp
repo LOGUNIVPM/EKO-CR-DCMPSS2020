@@ -7,9 +7,10 @@ void init(rack::Plugin *p) {
 
 	p->addModel(modelDirac);
 	p->addModel(modelEkoPanel);
-    p->addModel(modelTimbale);
-    p->addModel(modelSnareDrum);
-    p->addModel(modelCharleston);
-    p->addModel(modelABassDrum);
-    p->addModel(modelTriangle);
+        p->addModel(modelTimbale);
+        p->addModel(modelSnareDrum);
+        p->addModel(modelCharleston);
+        p->addModel(modelABassDrum);
+        p->addModel(modelTriangle);
+	p->addModel(modelCymbal1);
 }
