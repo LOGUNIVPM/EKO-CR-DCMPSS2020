@@ -2,16 +2,11 @@
  *
  * Author: Alessandro Nicolini <alessandro.nicolini.an@gmail.com.>
  *
- * For a detailed guide of the code and functions see the book:
- * "Developing Virtual Synthesizers with VCV Rack" by L.Gabrielli
- *
- * Copyright 2020, Leonardo Gabrielli
- *
  *-----------------------------------------------------------------*/
 
 #include "EKO-CR.hpp"
 
-static const float  attack = 0.0045; //attack time for ADSR [0.0020 - 0.0065]
+static const float  attack = 0.0005; //attack time for ADSR [0.0020 - 0.0065]
 static const float  decay = 0.1035;  //decay  time for ADSR [0.0065 - 0.1100]
 const float Hcoeffs[3] = { 0.7288, -0.7288, -0.4577 }; // b0,b1,a1 HighPass
 const float Bcoeffs[5] = { 0.2537, 0.0, -0.2537, -0.0730, 0.4926 }; //b0,b1,b2,a1,a2 BandPass
